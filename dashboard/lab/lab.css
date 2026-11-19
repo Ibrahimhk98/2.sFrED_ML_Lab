@@ -1,0 +1,551 @@
+/* Acquisition supplies the palette, type, cards, header and form controls. */
+.lab {
+  --lab-ink: var(--ink);
+  --lab-muted: var(--muted);
+  --lab-line: var(--grid);
+  --lab-accent: var(--accent);
+  --lab-amber: var(--y);
+  --lab-green: var(--ok);
+}
+.editor-shell {
+  overflow: hidden;
+}
+.editor-heading,
+.actions,
+.rubric,
+.canvas-footer,
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+}
+.editor-heading,
+.canvas-footer {
+  justify-content: space-between;
+}
+.editor-heading {
+  margin-bottom: var(--s4);
+}
+.editor-heading .panel-head {
+  margin-bottom: var(--s1);
+}
+.workbench {
+  height: clamp(455px, 58vh, 640px);
+  display: grid;
+  grid-template-columns: 207px minmax(0, 1fr);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.library {
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--s4) 10px 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: var(--card);
+}
+.library h3 {
+  font-size: 1rem;
+  margin: 0 4px var(--s2);
+}
+.library input {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--s3);
+  font-size: 0.85rem;
+}
+#libraryItems {
+  overflow: auto;
+  height: 0;
+  flex: 1;
+  padding: 4px 2px 12px;
+  scrollbar-width: thin;
+}
+.library-group h4 {
+  font: 500 0.7rem var(--mono);
+  color: var(--muted);
+  margin: 14px 6px 5px;
+}
+button.library-item {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 9px;
+  min-height: 34px;
+  text-align: left;
+  padding: 4px;
+  border-radius: var(--r-sm);
+  background: var(--card);
+  font-size: 0.81rem;
+  cursor: grab;
+}
+.library-item::after {
+  content: '⠿';
+  color: var(--muted);
+  margin-left: auto;
+  padding-right: 6px;
+}
+.block-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  background: color-mix(in oklab, var(--tone) 12%, var(--card));
+  color: color-mix(in oklab, var(--tone) 80%, var(--ink));
+  border-radius: 7px;
+  width: 27px;
+  height: 27px;
+}
+.block-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.canvas-column {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.graph-viewport {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+}
+.graph-viewport:active {
+  cursor: grabbing;
+}
+.graph-viewport.drag-over {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+#world {
+  position: absolute;
+  inset: 0 auto auto 0;
+  transform-origin: 0 0;
+  z-index: 2;
+}
+#wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.wire,
+.temporary-wire {
+  fill: none;
+  stroke: var(--tone, var(--accent));
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.wire {
+  opacity: 0.78;
+}
+.wire-selected {
+  stroke-width: 5;
+  opacity: 1;
+}
+.wire-hit {
+  pointer-events: stroke;
+  stroke: transparent;
+  stroke-width: 16;
+  fill: none;
+  cursor: pointer;
+}
+.temporary-wire {
+  stroke: var(--accent);
+  stroke-dasharray: 5 5;
+}
+.graph-node {
+  position: absolute;
+  width: 182px;
+  height: 92px;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  box-shadow: 0 2px 5px var(--line);
+  cursor: grab;
+  touch-action: none;
+}
+.graph-node.selected {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--accent) 32%, transparent),
+    var(--shadow);
+}
+.node-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 9px 5px;
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  background: color-mix(in oklab, var(--tone) 8%, var(--card));
+}
+button.block-title {
+  padding: 0;
+  justify-content: flex-start;
+  background: transparent;
+  min-height: 27px;
+  font-weight: 600;
+  font-size: 0.84rem;
+  text-align: left;
+  line-height: 1.13;
+  border-radius: 3px;
+  cursor: grab;
+}
+button.block-title:hover:not(:disabled) {
+  background: transparent;
+  transform: none;
+}
+.node-detail {
+  color: var(--muted);
+  font: 400 10px/1.25 var(--mono);
+  padding: 5px 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.port-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 60px;
+  height: 23px;
+}
+.graph-port {
+  position: absolute;
+  top: 0;
+  padding: 0;
+  gap: 3px;
+  background: none;
+  min-height: 22px;
+  border-radius: 6px;
+  font: 500 10px var(--mono);
+  color: var(--muted);
+  cursor: crosshair;
+}
+.graph-port[data-port='in'] {
+  left: -10px;
+}
+.graph-port[data-port='out'] {
+  right: -10px;
+  flex-direction: row-reverse;
+}
+.graph-port::before {
+  content: '';
+  display: block;
+  background: var(--card);
+  border: 2px solid var(--tone);
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  margin: 0 3px;
+}
+.graph-port[data-port='out']::before,
+.graph-port.linked::before {
+  background: var(--tone);
+}
+.graph-port[data-port='in'].linked::before {
+  box-shadow: inset 0 0 0 2px var(--card);
+}
+.graph-port:hover:not(:disabled),
+.graph-port.match,
+.graph-port.pending {
+  background: color-mix(in oklab, var(--tone) 16%, var(--card));
+  transform: none;
+  color: var(--ink);
+}
+.graph-port.match::before,
+.graph-port.pending::before {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--tone) 32%, transparent);
+}
+.canvas-tools {
+  position: absolute;
+  z-index: 4;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
+  cursor: default;
+}
+.canvas-tools button {
+  background: none;
+  min-height: 30px;
+  min-width: 30px;
+  padding: 3px 8px;
+  font-size: 1rem;
+}
+.canvas-tools #fitGraph {
+  font-size: 0.78rem;
+}
+.canvas-tools button:disabled {
+  outline: 0;
+}
+.canvas-tools span {
+  border-left: 1px solid var(--line-strong);
+  height: 15px;
+  margin: 0 4px;
+}
+.canvas-tools output,
+.canvas-footer .meta {
+  font: 400 0.73rem var(--mono);
+  color: var(--muted);
+}
+.canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.canvas-empty button {
+  pointer-events: auto;
+}
+.canvas-empty strong {
+  color: var(--ink);
+  font-size: 1.1rem;
+}
+.canvas-footer {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--card);
+  gap: 4px;
+}
+.canvas-footer .hint {
+  font-size: 0.75rem;
+}
+#status:not(:empty) {
+  margin-top: var(--s3);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+#status[data-error='true'] {
+  color: var(--bad);
+}
+.inspector {
+  scroll-margin-top: 112px;
+}
+.inspector > .panel-head {
+  margin-bottom: 6px;
+}
+.inspector #guide {
+  max-width: 95ch;
+}
+.inspector h3 {
+  font-size: 1rem;
+  margin: var(--s4) 0 var(--s2);
+}
+#connectionsList:not(:empty) {
+  margin: var(--s3) 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.connection-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--r-btn);
+  padding: 3px 8px 3px 11px;
+  background: var(--surface);
+  font: 0.74rem var(--mono);
+}
+.connection-chip button {
+  padding: 0 4px;
+  min-height: 23px;
+  min-width: 23px;
+  font-size: 1rem;
+}
+.small-action,
+.mini {
+  padding: 4px 12px;
+  min-height: 32px;
+  font-size: 0.8rem;
+}
+#panel {
+  margin-top: var(--s4);
+  min-width: 0;
+}
+.subhead {
+  font: 0.78rem var(--mono);
+  color: var(--muted);
+  margin: var(--s3) 0 var(--s2);
+}
+.dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: var(--s5);
+  gap: var(--s3);
+  border: 1px dashed var(--accent);
+  border-radius: var(--r-md);
+  background: color-mix(in oklab, var(--accent) 5%, var(--card));
+}
+.dropzone.drag {
+  outline: 2px solid var(--accent);
+}
+.dropzone small {
+  color: var(--muted);
+}
+.drop-icon {
+  font-size: 1.4rem;
+  color: var(--accent);
+}
+.rubric,
+.panel-actions {
+  margin: var(--s4) 0;
+  align-items: end;
+}
+.rubric input[type='number'] {
+  width: 130px;
+}
+.table-wrap {
+  overflow: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+th,
+td {
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--line);
+}
+th {
+  font-weight: 500;
+  color: var(--muted);
+}
+td input {
+  width: 135px;
+}
+.name-cell {
+  overflow-wrap: anywhere;
+}
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+}
+.check-grid .check {
+  background: var(--surface);
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+}
+.note,
+.result {
+  background: var(--surface);
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-md);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.result output {
+  display: block;
+  font: 500 1.6rem var(--mono);
+}
+.prediction-best {
+  color: var(--ok);
+}
+.lab canvas {
+  height: 285px;
+}
+.legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.legend b {
+  color: var(--accent);
+}
+.legend .compare {
+  color: var(--y);
+}
+.timeline {
+  display: flex;
+}
+@media (max-width: 760px) {
+  .workbench {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .library {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 10px;
+    gap: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+  }
+  .library h3 {
+    margin: 0;
+  }
+  .library input {
+    width: 100%;
+  }
+  #libraryItems {
+    grid-column: 1/-1;
+    display: flex;
+    height: auto;
+    overflow-x: auto;
+    padding: 2px;
+    gap: 6px;
+  }
+  .library-group {
+    display: contents;
+  }
+  .library-group h4 {
+    display: none;
+  }
+  button.library-item {
+    width: auto;
+    flex: none;
+    border: 1px solid var(--line);
+    padding-right: 8px;
+  }
+  .graph-viewport {
+    height: 400px;
+    flex: none;
+  }
+  .canvas-footer .hint {
+    display: none;
+  }
+  .inspector {
+    scroll-margin-top: 12px;
+  }
+}

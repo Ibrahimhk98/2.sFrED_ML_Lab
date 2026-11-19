@@ -1,0 +1,19 @@
+{
+  "name": "sfred-ml-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "node scripts/vendor-h5.mjs",
+    "test": "node --test test/*.test.mjs",
+    "serve": "node scripts/dashboard_server.mjs"
+  },
+  "dependencies": {
+    "esbuild": "0.28.2",
+    "fft.js": "4.0.4",
+    "h5wasm": "0.10.3",
+    "ml-matrix": "6.15.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

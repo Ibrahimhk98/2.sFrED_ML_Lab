@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PAL V2 · Behavior lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,400..600&family=Geist+Mono:wght@400..500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="lab/lab.css" />
+  </head>
+  <body class="lab">
+    <header class="topbar">
+      <div class="brand">
+        <h1>PAL V2 behavior lab</h1>
+        <p class="sub">Multisensor time-series analysis and machine learning</p>
+      </div>
+      <nav aria-label="Views">
+        <a href="lab.html" aria-current="page">Behavior lab</a>
+        <a href="kit.html" target="_blank" rel="noopener">Live kit <span aria-hidden="true">↗</span></a>
+      </nav>
+      <div class="status-badge">
+        <span class="pulse-dot" id="datasetDot" aria-hidden="true"></span
+        ><span id="datasetStatus">0 recordings</span>
+      </div>
+    </header>
+    <main>
+      <section class="panel editor-shell" data-tone="connect" aria-labelledby="editorTitle">
+        <div class="editor-heading">
+          <div>
+            <div class="panel-head"><h2 id="editorTitle">Pipeline editor</h2></div>
+            <p class="hint">
+              Drag blocks onto the grid. Connect an output on the right of one block to an input on the
+              left of another.
+            </p>
+          </div>
+          <div class="actions">
+            <button id="layoutAction">Blank canvas</button
+            ><button class="btn-primary" id="train" disabled>Train pipeline</button>
+          </div>
+        </div>
+        <div class="workbench">
+          <aside class="library" aria-label="Block library">
+            <h3>Block library</h3>
+            <input
+              type="search"
+              id="searchBlocks"
+              aria-label="Find a block"
+              placeholder="Find a block…"
+            />
+            <div id="libraryItems"></div>
+          </aside>
+          <div class="canvas-column">
+            <div
+              class="graph-viewport"
+              id="viewport"
+              role="region"
+              aria-label="Pipeline canvas"
+              tabindex="0"
+            >
+              <svg id="wires" aria-hidden="true"><g id="wireGroup"></g></svg>
+              <div id="world"></div>
+              <div class="canvas-empty" id="emptyCanvas" hidden>
+                <strong>Build your pipeline</strong
+                ><span>Start with Import recordings from the block library.</span
+                ><button id="starter">Load starter pipeline</button>
+              </div>
+              <div class="canvas-tools" aria-label="Canvas controls">
+                <button id="undo" title="Undo canvas edit" aria-label="Undo canvas edit">↶</button
+                ><button id="redo" title="Redo canvas edit" aria-label="Redo canvas edit">↷</button>
+                <span></span><button id="zoomOut" aria-label="Zoom out">−</button
+                ><output id="zoomLevel">100%</output><button id="zoomIn" aria-label="Zoom in">+</button
+                ><button id="fitGraph" title="Fit all blocks">Fit</button>
+              </div>
+            </div>
+            <div class="canvas-footer">
+              <span id="graphCount" class="meta"></span
+              ><span class="hint">Drag the grid to pan · Double-click a block for settings</span>
+            </div>
+          </div>
+        </div>
+        <p id="status" role="status" aria-live="polite"></p>
+      </section>
+      <section class="panel inspector" id="inspector" data-tone="connect" aria-labelledby="panel-title">
+        <div class="panel-head">
+          <h2 id="panel-title" tabindex="-1">Block settings</h2>
+          <button class="small-action" id="removeSelection" hidden>Remove block</button>
+        </div>
+        <p id="guide" class="hint"></p>
+        <div id="connectionsList"></div>
+        <div id="panel"></div>
+      </section>
+    </main>
+    <script type="module" src="lab/ui.js"></script>
+  </body>
+</html>

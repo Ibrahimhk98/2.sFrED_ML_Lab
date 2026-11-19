@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PAL V2 · Live kit</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,400..600&amp;family=Geist+Mono:wght@400..500&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><h1>Live kit</h1><p class="sub">Stream sensor readings to the behavior lab</p></div>
+    <nav aria-label="Views">
+      <a href="lab.html" target="_blank" rel="noopener">Behavior lab ↗</a>
+      <a href="kit.html" aria-current="page">Live kit</a>
+    </nav>
+  </header>
+  <main>
+    <section class="panel" data-tone="connect" aria-labelledby="connectionTitle">
+      <div class="panel-head">
+        <h2 id="connectionTitle">Device connection</h2>
+        <button id="disconnectBtn" disabled>Disconnect</button>
+      </div>
+      <p class="hint">Connect a kit here and keep this tab open. In the lab, choose the kit in <strong>Save &amp; run live</strong> and start prediction.</p>
+      <div class="transports">
+        <fieldset class="group" data-tone="usb">
+          <legend>USB</legend>
+          <div class="row"><button id="usb" class="btn-primary">Connect USB</button><button id="usbBridge">Connect USB bridge</button></div>
+          <p class="hint">For the bridge, start this lab’s USB helper as described in the README.</p>
+        </fieldset>
+        <fieldset class="group" data-tone="ble">
+          <legend>Bluetooth</legend>
+          <div class="row"><button id="ble">Connect Bluetooth</button></div>
+          <p class="hint">Choose the kit’s PAL name and accept pairing if prompted.</p>
+        </fieldset>
+        <fieldset class="group wifi" data-tone="wifi">
+          <legend>Wi-Fi</legend>
+          <form id="wifiForm" class="row">
+            <label>Kit IP or local hostname<input id="wifiHost" required placeholder="192.168.1.42" autocomplete="off"></label>
+            <button id="wifiConnect">Connect Wi-Fi</button>
+          </form>
+          <p class="hint">Use the address shown by acquisition when the kit joined your network.</p>
+        </fieldset>
+      </div>
+      <p id="status" role="status" aria-live="polite">No kit connected.</p>
+    </section>
+  </main>
+  <script type="module" src="kit.js"></script>
+</body>
+</html>

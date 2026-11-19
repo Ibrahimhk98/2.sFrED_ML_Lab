@@ -1,0 +1,7 @@
+node_modules/
+dashboard/vendor/
+.DS_Store
+.venv/
+__pycache__/
+*.h5
+*.hdf5
