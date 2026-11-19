@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaults, models } from '../dashboard/lab/catalog.js';
+import { defaults, models, features, spectralFeatures, featureDescriptions } from '../dashboard/lab/catalog.js';
 import { exampleTrial } from '../dashboard/lab/examples.js';
 import {
   indexSession,
@@ -164,4 +164,33 @@ test('live buffer waits for all required sensors and clears history on a kit cha
   assert.ok(featureRow(indexSession(window.session), window.start, live.recipe));
   assert.equal(add('audio', source.session.audio.slice(21, 22), 'b'), null);
   assert.equal(live.session.imu.length, 0);
+});
+
+test('all features have concise descriptions and extended spectral features are finite and well-behaved', () => {
+  for (const key of Object.keys(features)) {
+    assert.equal(typeof featureDescriptions[key], 'string');
+    assert.ok(featureDescriptions[key].trim().length > 0 && featureDescriptions[key].length <= 100);
+  }
+  const recipe = {
+    ...defaults(),
+    channels: ['audio'],
+    features: spectralFeatures,
+    seconds: 2
+  };
+  const cols = featureColumns(recipe);
+  assert.deepEqual(
+    cols.map((c) => c.unit),
+    ['Hz', 'Hz', 'Hz', 'Hz', '0–1', '0–1']
+  );
+  const source = records[1].source; // Rotating trial: strong 330 Hz audio tone
+  const row = featureRow(source, source.bounds[0], recipe);
+  assert.equal(row.length, spectralFeatures.length);
+  assert.ok(row.every(Number.isFinite));
+  const [peakHz, centroid, bandwidth, rolloff, flatness, entropy] = row;
+  assert.ok(Math.abs(peakHz - 330) < 5);
+  assert.ok(centroid > 0 && centroid < 4000);
+  assert.ok(bandwidth > 0 && bandwidth < 4000);
+  assert.ok(rolloff >= peakHz - 5 && rolloff <= 4000);
+  assert.ok(flatness >= 0 && flatness <= 1);
+  assert.ok(entropy >= 0 && entropy <= 1);
 });

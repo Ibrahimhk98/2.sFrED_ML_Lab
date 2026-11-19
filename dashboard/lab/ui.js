@@ -1,4 +1,12 @@
-import { channels, groups, features, models, stages } from './catalog.js';
+import {
+  channels,
+  groups,
+  features,
+  spectralFeatures,
+  featureDescriptions,
+  models,
+  stages
+} from './catalog.js';
 import {
   starterGraph,
   ports,
@@ -191,6 +199,8 @@ function reportFor(id) {
   };
 }
 function show(id, edge = null, focus = false) {
+  closeFeatureInfo?.();
+  closeFeatureInfo = null;
   selected = findNode(graph, id);
   toolbar();
   const panel = $('panel'),
@@ -472,13 +482,25 @@ function filtersPanel(panel) {
       })
   );
 }
+let closeFeatureInfo = null;
 function featuresPanel(panel) {
+  closeFeatureInfo?.();
+  closeFeatureInfo = null;
   const check = (type, k, name) =>
     `<label class="check"><input type="checkbox" data-set="${type}" value="${k}" ${checked(config[type].includes(k))}>${esc(name)}</label>`;
+  const featureCard = (k) => {
+    const name = features[k];
+    const desc = featureDescriptions[k];
+    return `<div class="feature-card">
+      <label class="check"><input type="checkbox" data-set="features" value="${k}" ${checked(config.features.includes(k))}><span>${esc(name)}</span></label>
+      <button type="button" class="feature-info-btn" data-info="${k}" aria-expanded="false" aria-controls="feature-tip-${k}" aria-label="About ${esc(name)}" title="About ${esc(name)}">i</button>
+      <div class="feature-popover" id="feature-tip-${k}" role="tooltip" hidden>${esc(desc)}</div>
+    </div>`;
+  };
   const availableKeys = available();
   const featureGroups = {
     'Time domain': ['mean', 'rms', 'sd', 'range'],
-    'Frequency domain': ['peakHz', 'centroid'],
+    'Frequency domain': spectralFeatures,
     'Raw waveform': ['raw']
   };
   panel.innerHTML =
@@ -495,7 +517,7 @@ function featuresPanel(panel) {
     Object.entries(featureGroups)
       .map(
         ([g, keys]) =>
-          `<p class="subhead">${g}</p><div class="check-grid">${keys.map((k) => check('features', k, features[k])).join('')}</div>`
+          `<p class="subhead">${g}</p><div class="check-grid">${keys.map(featureCard).join('')}</div>`
       )
       .join('') +
     '<p class="hint">Frequency features use a mean-removed Hann-windowed FFT. Choose at least four seconds when using these features with 1 Hz environmental channels. Raw mode samples 32 positions in each window.</p>';
@@ -509,6 +531,42 @@ function featuresPanel(panel) {
         );
       })
   );
+  const hideAll = () => {
+    panel.querySelectorAll('.feature-info-btn[aria-expanded="true"]').forEach((btn) => {
+      btn.setAttribute('aria-expanded', 'false');
+    });
+    panel.querySelectorAll('.feature-popover:not([hidden])').forEach((pop) => {
+      pop.hidden = true;
+    });
+  };
+  panel.querySelectorAll('.feature-info-btn').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const pop = panel.querySelector('#feature-tip-' + btn.dataset.info);
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      hideAll();
+      if (!open && pop) {
+        btn.setAttribute('aria-expanded', 'true');
+        pop.hidden = false;
+      }
+    };
+  });
+  const onDocClick = (e) => {
+    if (!panel.isConnected) {
+      closeFeatureInfo?.();
+      return;
+    }
+    if (!e.target.closest('.feature-popover, .feature-info-btn')) hideAll();
+  };
+  const onDocKey = (e) => {
+    if (e.key === 'Escape') hideAll();
+  };
+  document.addEventListener('click', onDocClick);
+  document.addEventListener('keydown', onDocKey);
+  closeFeatureInfo = () => {
+    document.removeEventListener('click', onDocClick);
+    document.removeEventListener('keydown', onDocKey);
+  };
 }
 function plotsPanel(panel) {
   const data = branch(graph, selected.id, records, dataset.task);

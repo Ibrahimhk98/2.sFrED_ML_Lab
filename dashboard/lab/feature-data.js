@@ -11,7 +11,11 @@ export function featureColumns(recipe) {
       return [
         {
           name: channel + ' · ' + features[feature],
-          unit: ['peakHz', 'centroid'].includes(feature) ? 'Hz' : unit
+          unit: ['peakHz', 'centroid', 'bandwidth', 'rolloff'].includes(feature)
+            ? 'Hz'
+            : ['flatness', 'entropy'].includes(feature)
+              ? '0–1'
+              : unit
         }
       ];
     })

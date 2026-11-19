@@ -1,5 +1,5 @@
 import { FFT } from '../vendor/lab-math.js';
-import { channels, groupOf } from './catalog.js';
+import { channels, groupOf, spectralFeatures } from './catalog.js';
 
 const periodOf = (key) => (groupOf(key) === 'imu' ? 1000 / 104 : 1000);
 const frameEnd = (frame) => frame.time_ms + (frame.pcm.length * 1000) / frame.rate;
@@ -299,20 +299,70 @@ export function featureRow(source, start, recipe) {
       sd: Math.sqrt(Math.max(0, variance / v.length)),
       range: hi - lo
     };
-    if (recipe.features.includes('peakHz') || recipe.features.includes('centroid')) {
+    if (recipe.features.some((f) => spectralFeatures.includes(f))) {
       const spec = frame.observations >= 4 && spectrum(v, frame.rate);
       if (!spec) return null;
+      const amps = spec.amplitudes;
+      const m = amps.length - 1;
+      const wantBandwidth = recipe.features.includes('bandwidth');
+      const wantRolloff = recipe.features.includes('rolloff');
+      const wantFlatness = recipe.features.includes('flatness');
+      const wantEntropy = recipe.features.includes('entropy');
       let peak = 0,
         weight = 0,
-        weighted = 0;
-      for (let i = 1; i < spec.amplitudes.length; i++) {
-        const a = spec.amplitudes[i];
-        if (a > spec.amplitudes[peak] || (peak === 0 && a > 0)) peak = i;
+        weighted = 0,
+        energy = 0,
+        logSum = 0;
+      for (let i = 1; i < amps.length; i++) {
+        const a = amps[i];
+        if (a > amps[peak] || (peak === 0 && a > 0)) peak = i;
         weight += a;
         weighted += i * a;
+        if (wantRolloff || wantEntropy) energy += a * a;
+        if (wantFlatness) logSum += Math.log(a + 1e-12);
       }
+      const centroid = weight ? (weighted * spec.binHz) / weight : 0;
       result.peakHz = peak * spec.binHz;
-      result.centroid = weight ? (weighted * spec.binHz) / weight : 0;
+      result.centroid = centroid;
+      if (wantBandwidth) {
+        let spread = 0;
+        if (weight) {
+          for (let i = 1; i < amps.length; i++) {
+            const df = i * spec.binHz - centroid;
+            spread += amps[i] * df * df;
+          }
+        }
+        result.bandwidth = weight ? Math.sqrt(spread / weight) : 0;
+      }
+      if (wantRolloff) {
+        let rolloff = 0;
+        if (energy) {
+          const target = 0.85 * energy;
+          let acc = 0;
+          for (let i = 1; i < amps.length; i++) {
+            acc += amps[i] * amps[i];
+            if (acc >= target) {
+              rolloff = i * spec.binHz;
+              break;
+            }
+          }
+        }
+        result.rolloff = rolloff;
+      }
+      if (wantFlatness) {
+        result.flatness = weight && m > 0 ? Math.min(1, Math.exp(logSum / m) / (weight / m)) : 0;
+      }
+      if (wantEntropy) {
+        let h = 0;
+        if (energy && m > 1) {
+          for (let i = 1; i < amps.length; i++) {
+            const p = (amps[i] * amps[i]) / energy;
+            if (p > 0) h -= p * Math.log(p);
+          }
+          h /= Math.log(m);
+        }
+        result.entropy = Math.max(0, Math.min(1, h));
+      }
     }
     for (const name of recipe.features) {
       if (name === 'raw')

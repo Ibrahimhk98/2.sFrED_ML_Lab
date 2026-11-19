@@ -28,7 +28,25 @@ export const features = {
   range: 'Peak-to-peak range',
   peakHz: 'Dominant frequency',
   centroid: 'Spectral centroid',
+  bandwidth: 'Spectral bandwidth',
+  rolloff: 'Spectral roll-off (85%)',
+  flatness: 'Spectral flatness',
+  entropy: 'Spectral entropy',
   raw: '32 evenly spaced samples'
+};
+export const spectralFeatures = ['peakHz', 'centroid', 'bandwidth', 'rolloff', 'flatness', 'entropy'];
+export const featureDescriptions = {
+  mean: 'Average signal value across the window.',
+  rms: 'Overall signal magnitude, sensitive to large oscillations.',
+  sd: 'Spread of signal values around the window mean.',
+  range: 'Difference between the highest and lowest value in the window.',
+  peakHz: 'Frequency with the strongest amplitude in the FFT spectrum.',
+  centroid: 'Amplitude-weighted center of mass of the frequency spectrum.',
+  bandwidth: 'Spread of frequencies around the spectral centroid.',
+  rolloff: 'Frequency below which 85% of the spectral energy lies.',
+  flatness: 'Tonality measure (0 = pure tone, 1 = noise-like spectrum).',
+  entropy: 'Spectral complexity (0 = single frequency, 1 = flat spread).',
+  raw: '32 evenly spaced samples preserving the waveform shape.'
 };
 export const models = {
   knn: {
