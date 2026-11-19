@@ -114,6 +114,8 @@ export function deployment(call, send, esc, status) {
         status('Saved model ready.');
       } catch (error) {
         status(error.message, true);
+      } finally {
+        input.value = '';
       }
     };
     el('saveModel').onclick = async () => {

@@ -62,16 +62,23 @@ function growTree(x, y, rows, classes, depth, random) {
       const i = order[n - 1],
         k = classes ? y[i] : 0,
         v = classes ? 1 : y[i];
-      leftSq += 2 * left[k] * v + v * v;
-      rightSq += v * v - 2 * right[k] * v;
+      if (classes) {
+        leftSq += 2 * left[k] * v + v * v;
+        rightSq += v * v - 2 * right[k] * v;
+      }
       left[k] += v;
       right[k] -= v;
+      if (!classes) {
+        leftSq = left[0] * left[0];
+        rightSq = right[0] * right[0];
+      }
       if (n < 2 || order.length - n < 2 || x[i][j] === x[order[n]][j]) continue;
       const score = leftSq / n + rightSq / (order.length - n);
       if (score > bestScore) {
         bestScore = score;
         column = j;
-        threshold = x[i][j] / 2 + x[order[n]][j] / 2;
+        const mid = x[i][j] / 2 + x[order[n]][j] / 2;
+        threshold = mid > x[i][j] ? mid : x[order[n]][j];
       }
     }
   }
@@ -79,6 +86,7 @@ function growTree(x, y, rows, classes, depth, random) {
   const low = [],
     high = [];
   for (const i of rows) (x[i][column] < threshold ? low : high).push(i);
+  if (!low.length || !high.length) return leaf();
   return {
     column,
     threshold,

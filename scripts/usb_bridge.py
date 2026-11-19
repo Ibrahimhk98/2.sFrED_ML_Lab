@@ -32,9 +32,12 @@ async def run(port):
         try:
             device = serial.Serial(port, 230400, timeout=0.1, write_timeout=1)
 
+            def read_available():
+                return device.read(min(4096, device.in_waiting) or 1)
+
             async def read():
                 while True:
-                    chunk = await asyncio.to_thread(device.read, 4096)
+                    chunk = await asyncio.to_thread(read_available)
                     if chunk:
                         # Firmware output is ASCII JSONL; preserve partial lines.
                         await socket.send(chunk.decode("ascii", errors="replace"))

@@ -107,28 +107,66 @@ export function waveform(source, key, start, end, columns = 800) {
   return points;
 }
 export function uniformWindow(source, key, start, end) {
-  const audio = key === 'audio',
-    values = [],
+  if (key === 'audio') {
+    const rows = source.session.audio;
+    const slices = [];
+    let previous,
+      rate,
+      first,
+      last,
+      total = 0;
+    for (let i = lowerBound(rows, start - source.longestFrame); i < rows.length; i++) {
+      const f = rows[i];
+      if (f.time_ms >= end) break;
+      if (frameEnd(f) <= start) continue;
+      if (
+        previous &&
+        (Math.abs(f.time_ms - frameEnd(previous)) > 2 ||
+          f.rate !== previous.rate ||
+          f.stream_id !== previous.stream_id ||
+          f.segment !== previous.segment ||
+          (Number.isFinite(f.sequence) && f.sequence !== previous.sequence + 1))
+      )
+        return null;
+      const from = Math.max(0, Math.ceil(((start - f.time_ms) * f.rate) / 1000));
+      const to = Math.min(f.pcm.length, Math.ceil(((end - f.time_ms) * f.rate) / 1000));
+      if (from < to) {
+        if (first === undefined) first = f.time_ms + (from * 1000) / f.rate;
+        last = f.time_ms + ((to - 1) * 1000) / f.rate;
+        rate = f.rate;
+        slices.push([f.pcm, from, to]);
+        total += to - from;
+      }
+      previous = f;
+    }
+    if (!total) return null;
+    const tolerance = Math.max(2, 1000 / rate);
+    if (first - start > tolerance || end - last > tolerance) return null;
+    const values = new Float64Array(total);
+    let offset = 0;
+    for (const [pcm, from, to] of slices) {
+      for (let j = from; j < to; j++) values[offset++] = pcm[j] / 32768;
+    }
+    return { values, rate, observations: total };
+  }
+  const values = [],
     times = [];
   let broken = false,
-    rate,
     first,
     last;
-  visit(source, key, start, end, (t, v, gap, hz) => {
+  visit(source, key, start, end, (t, v, gap) => {
     if (gap) broken = true;
     first ??= t;
     last = t;
-    rate = hz;
     values.push(v);
-    if (!audio) times.push(t);
+    times.push(t);
   });
   if (!values.length || broken) return null;
-  const tolerance = audio ? Math.max(2, 1000 / rate) : periodOf(key) * 1.45;
+  const tolerance = periodOf(key) * 1.45;
   if (first - start > tolerance || end - last > tolerance) return null;
-  if (audio) return { values, rate, observations: values.length };
   // Interpolate timestamped sensor samples onto a uniform grid. Endpoints use
   // the nearest in-window reading, so a held-out interval never supplies data.
-  rate = 1000 / periodOf(key);
+  const rate = 1000 / periodOf(key);
   const count = Math.max(1, Math.round(((end - start) * rate) / 1000));
   if (values.length < Math.floor(count * 0.75)) return null;
   const uniform = new Float64Array(count);
@@ -157,14 +195,17 @@ function biquad(values, rate, cutoff, highpass) {
     x2 = x1,
     y1 = highpass ? 0 : x1,
     y2 = y1;
-  return Float64Array.from(values, (x) => {
+  const out = new Float64Array(values.length);
+  for (let i = 0; i < values.length; i++) {
+    const x = values[i];
     const y = b0 * x + b1 * x1 + b0 * x2 - a1 * y1 - a2 * y2;
     x2 = x1;
     x1 = x;
     y2 = y1;
     y1 = y;
-    return y;
-  });
+    out[i] = y;
+  }
+  return out;
 }
 export function filterSignal(values, rate, filter) {
   if (!filter || filter.type === 'none') return values;
@@ -174,24 +215,56 @@ export function filterSignal(values, rate, filter) {
   if (filter.type === 'low' || filter.type === 'band') values = biquad(values, rate, filter.high, false);
   return values;
 }
+const fftCache = new Map();
+const hannCache = new Map();
+
+function getFft(n) {
+  let entry = fftCache.get(n);
+  if (!entry) {
+    if (fftCache.size >= 16) fftCache.clear();
+    entry = { fft: new FFT(n), input: new Float64Array(n), complex: new Float64Array(2 * n) };
+    fftCache.set(n, entry);
+  }
+  return entry;
+}
+function getHann(length) {
+  let entry = hannCache.get(length);
+  if (!entry) {
+    if (hannCache.size >= 32) hannCache.clear();
+    const weights = new Float64Array(length);
+    const scale = (2 * Math.PI) / (length - 1);
+    let gain = 0;
+    for (let i = 0; i < length; i++) {
+      const h = 0.5 - 0.5 * Math.cos(scale * i);
+      weights[i] = h;
+      gain += h;
+    }
+    entry = { weights, gain };
+    hannCache.set(length, entry);
+  }
+  return entry;
+}
 export function spectrum(values, rate) {
   if (values.length < 4) return null;
-  const n = 2 ** Math.ceil(Math.log2(values.length)),
-    fft = new FFT(n);
-  const input = new Float64Array(n),
-    complex = new Float64Array(2 * n);
-  const mean = values.reduce((s, v) => s + v, 0) / values.length;
-  let gain = 0;
-  for (let i = 0; i < values.length; i++) {
-    const hann = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (values.length - 1));
-    input[i] = (values[i] - mean) * hann;
-    gain += hann;
-  }
+  const len = values.length;
+  const n = 2 ** Math.ceil(Math.log2(len));
+  const { fft, input, complex } = getFft(n);
+  const { weights, gain } = getHann(len);
+  let sum = 0;
+  for (let i = 0; i < len; i++) sum += values[i];
+  const mean = sum / len;
+  for (let i = 0; i < len; i++) input[i] = (values[i] - mean) * weights[i];
+  if (len < n) input.fill(0, len);
   fft.realTransform(complex, input);
-  const amplitudes = Float64Array.from(
-    { length: n / 2 + 1 },
-    (_, i) => (Math.hypot(complex[2 * i], complex[2 * i + 1]) * (i === 0 || i === n / 2 ? 1 : 2)) / gain
-  );
+  const half = n / 2;
+  const amplitudes = new Float64Array(half + 1);
+  const invGain = 1 / gain;
+  const invGain2 = 2 / gain;
+  amplitudes[0] = Math.hypot(complex[0], complex[1]) * invGain;
+  for (let i = 1; i < half; i++) {
+    amplitudes[i] = Math.hypot(complex[2 * i], complex[2 * i + 1]) * invGain2;
+  }
+  amplitudes[half] = Math.hypot(complex[n], complex[n + 1]) * invGain;
   return { amplitudes, binHz: rate / n };
 }
 export function featureRow(source, start, recipe) {

@@ -92,8 +92,11 @@ async function dispatch(action, payload) {
       previews.set(payload.table, preview);
       return previewInfo(preview);
     }
-    case 'columns':
-      return plotColumns(previews.get(payload.table), payload);
+    case 'columns': {
+      const preview = previews.get(payload.table);
+      if (!preview) throw new Error('Extract features first.');
+      return plotColumns(preview, payload);
+    }
     case 'train': {
       const artifacts = new Map(),
         tables = new Map(),
@@ -155,6 +158,7 @@ async function dispatch(action, payload) {
       return Object.fromEntries(
         payload.ids.map((id) => {
           const c = trained.get(id);
+          if (!c) throw new Error('Train the pipeline before revealing test scores.');
           return [id, evaluate(c.artifact.model, c.test)];
         })
       );

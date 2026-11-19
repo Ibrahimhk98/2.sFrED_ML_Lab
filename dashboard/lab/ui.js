@@ -398,11 +398,18 @@ function windowsPanel(panel) {
     <label>Overlap (%)<input type="number" id="overlap" value="${config.overlap}" min="0" max="90" step="1"></label></div>
     <p class="hint" id="stride"></p>`;
   function hints() {
-    if (time) $('testPct').textContent = 100 - config.trainPct - config.validPct + '% test';
+    if (time) {
+      const testPct = 100 - config.trainPct - config.validPct;
+      $('testPct').textContent =
+        Number.isFinite(testPct) && testPct > 0 ? testPct + '% test' : 'Invalid split';
+    }
+    const stride = config.seconds * (1 - config.overlap / 100);
     $('stride').textContent =
-      'A new window starts every ' +
-      (config.seconds * (1 - config.overlap / 100)).toFixed(2) +
-      ' s. Incomplete windows are counted in the evaluation report.';
+      Number.isFinite(stride) && stride > 0
+        ? 'A new window starts every ' +
+          stride.toFixed(2) +
+          ' s. Incomplete windows are counted in the evaluation report.'
+        : 'Enter a valid window length and overlap.';
   }
   hints();
   $('split').onchange = (e) => {
